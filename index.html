@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🤖 Property Chatbot | Gardens, Plots, Min/Max Price</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0b2b26, #163a2f);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* chatbot main container */
+        .chatbot-container {
+            width: 100%;
+            max-width: 550px;
+            height: 750px;
+            background: #f5f7fb;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* header */
+        .chat-header {
+            background: #1e4a3b;
+            padding: 20px 20px 14px;
+            color: white;
+            text-align: center;
+        }
+        .chat-header h2 {
+            font-size: 1.7rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .chat-header p {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 6px;
+        }
+
+        /* messages area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #fefefe;
+        }
+
+        /* message bubbles */
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeSlide 0.2s ease;
+        }
+        .bot {
+            align-self: flex-start;
+        }
+        .user {
+            align-self: flex-end;
+        }
+        .bubble {
+            padding: 10px 15px;
+            border-radius: 22px;
+            font-size: 0.92rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .bot .bubble {
+            background: #e9ecef;
+            color: #1e2a32;
+            border-bottom-left-radius: 5px;
+        }
+        .user .bubble {
+            background: #1e4a3b;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .time {
+            font-size: 0.6rem;
+            color: #8d9aa8;
+            margin-top: 4px;
+            margin-left: 10px;
+        }
+
+        /* property card inside bot message */
+        .prop-card {
+            background: white;
+            border-radius: 18px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            border-left: 5px solid #1e4a3b;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .prop-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .prop-detail {
+            font-size: 0.75rem;
+            color: #2d6a4f;
+            margin-top: 4px;
+        }
+        hr {
+            margin: 6px 0;
+        }
+
+        /* BUTTON PANEL (proper working buttons) */
+        .button-panel {
+            background: white;
+            padding: 14px 16px 18px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .chat-btn {
+            background: #edf2f4;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e4a3b;
+            cursor: pointer;
+            transition: 0.1s linear;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            flex: 1 0 auto;
+            min-width: 110px;
+        }
+        .chat-btn:hover {
+            background: #d4e0dc;
+            transform: translateY(-2px);
+        }
+        .chat-btn:active {
+            transform: scale(0.96);
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            padding: 8px 16px 16px;
+            background: white;
+        }
+        #textInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        #textInput:focus {
+            border-color: #1e4a3b;
+        }
+        #sendTextBtn {
+            background: #1e4a3b;
+            border: none;
+            color: white;
+            padding: 0 22px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        footer {
+            font-size: 0.6rem;
+            text-align: center;
+            background: white;
+            padding-bottom: 8px;
+            color: #6c757d;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .flex-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="chatbot-container">
+    <div class="chat-header">
+        <h2>🤖🏡 PropertyBot</h2>
+        <p>Houses · Gardens · Plots | Min / Max Prices</p>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <div class="message bot">
+            <div class="bubble">
+                👋 Salam! I am PropertyBot.<br>
+                ✅ I have houses (with garden info) and plots for sale.<br>
+                Use <strong>buttons below</strong> or type your own query.<br>
+                ⭐ Try: "cheapest house with garden" or "max plot"
+            </div>
+            <div class="time">Online</div>
+        </div>
+    </div>
+
+    <!-- BUTTONS: all working like a real chatbot -->
+    <div class="button-panel">
+        <div class="flex-btns">
+            <button class="chat-btn" data-command="all_houses">🏠 All Houses</button>
+            <button class="chat-btn" data-command="all_plots">📐 All Plots</button>
+            <button class="chat-btn" data-command="gardens_only">🌿 Houses with Garden</button>
+            <button class="chat-btn" data-command="min_house">💰 Min Price House</button>
+            <button class="chat-btn" data-command="max_house">👑 Max Price House</button>
+            <button class="chat-btn" data-command="min_plot">📌 Min Price Plot</button>
+            <button class="chat-btn" data-command="max_plot">🌟 Max Price Plot</button>
+            <button class="chat-btn" data-command="cheapest_garden">🌻 Cheapest Garden House</button>
+            <button class="chat-btn" data-command="all_properties">📋 All Properties</button>
+        </div>
+    </div>
+
+    <!-- text input area (optional, but works for natural language) -->
+    <div class="input-row">
+        <input type="text" id="textInput" placeholder="Ask anything e.g., cheapest plot, houses under 200k...">
+        <button id="sendTextBtn">Send</button>
+    </div>
+    <footer>💬 Buttons work instantly | AI-powered property search</footer>
+</div>
+
+<script>
+    // ---------- DATABASE ----------
+    const houses = [
+        { id: 1, name: "Sunny Villa", price: 245000, garden: true, location: "Greenfield", type: "house" },
+        { id: 2, name: "Maple Cottage", price: 189000, garden: true, location: "Lakeview", type: "house" },
+        { id: 3, name: "Urban Loft", price: 312000, garden: false, location: "Downtown", type: "house" },
+        { id: 4, name: "Garden Haven", price: 278000, garden: true, location: "Meadows", type: "house" },
+        { id: 5, name: "Cozy Bungalow", price: 159000, garden: false, location: "Old Town", type: "house" },
+        { id: 6, name: "Rosewood Estate", price: 498000, garden: true, location: "Hillside", type: "house" },
+        { id: 7, name: "Orchard House", price: 324000, garden: true, location: "Riverside", type: "house" }
+    ];
+
+    const plots = [
+        { id: 101, name: "Hilltop Plot", price: 89000, area: "2500 sqft", location: "North Hills", type: "plot" },
+        { id: 102, name: "Lakeside Land", price: 124000, area: "1800 sqft", location: "South Lake", type: "plot" },
+        { id: 103, name: "Corner Lot", price: 67000, area: "1200 sqft", location: "New Town", type: "plot" },
+        { id: 104, name: "Premium Plot", price: 210000, area: "3200 sqft", location: "Green Valley", type: "plot" },
+        { id: 105, name: "Garden Plot", price: 54000, area: "900 sqft", location: "Eastside", type: "plot" }
+    ];
+
+    // helper format price
+    function formatPrice(p) {
+        return '₹' + p.toLocaleString('en-IN');
+    }
+
+    // convert property to readable HTML
+    function propertyToHTML(item) {
+        if (item.type === 'house') {
+            const gardenIcon = item.garden ? '✅ Has Garden 🌻' : '❌ No Garden';
+            return `<div class="prop-card">
+                        <div class="prop-title">🏠 ${item.name}</div>
+                        <div>💰 ${formatPrice(item.price)}</div>
+                        <div class="prop-detail">🌿 ${gardenIcon} | 📍 ${item.location}</div>
+                    </div>`;
+        } else {
+            return `<div class="prop-card">
+                        <div class="prop-title">📐 ${item.name} (Plot)</div>
+                        <div>💰 ${formatPrice(item.price)}</div>
+                        <div class="prop-detail">📏 ${item.area} | 📍 ${item.location}</div>
+                    </div>`;
+        }
+    }
+
+    function displayPropertyList(properties, title) {
+        if (!properties.length) return `❌ No matching properties found for "${title}".`;
+        let html = `<strong>✨ ${title} (${properties.length})</strong><br>`;
+        properties.forEach(prop => {
+            html += propertyToHTML(prop);
+        });
+        return html;
+    }
+
+    // ---------- CHATBOT CORE LOGIC (handles commands + text queries) ----------
+    function getBotResponse(inputText) {
+        let lower = inputText.toLowerCase().trim();
+
+        // ---- BUTTON COMMANDS (mapped) ----
+        if (lower === "all_houses") {
+            return displayPropertyList(houses, "🏡 All Houses");
+        }
+        if (lower === "all_plots") {
+            return displayPropertyList(plots, "📐 All Plots for Sale");
+        }
+        if (lower === "gardens_only") {
+            const gardenHouses = houses.filter(h => h.garden === true);
+            return displayPropertyList(gardenHouses, "🌸 Houses with Beautiful Garden");
+        }
+        if (lower === "min_house") {
+            if (!houses.length) return "No houses found.";
+            const cheapest = houses.reduce((a,b) => a.price < b.price ? a : b);
+            return `🏆 **Cheapest House**<br>${propertyToHTML(cheapest)}`;
+        }
+        if (lower === "max_house") {
+            if (!houses.length) return "No houses found.";
+            const expensive = houses.reduce((a,b) => a.price > b.price ? a : b);
+            return `👑 **Most Expensive House**<br>${propertyToHTML(expensive)}`;
+        }
+        if (lower === "min_plot") {
+            if (!plots.length) return "No plots available.";
+            const cheapestPlot = plots.reduce((a,b) => a.price < b.price ? a : b);
+            return `📌 **Cheapest Plot**<br>${propertyToHTML(cheapestPlot)}`;
+        }
+        if (lower === "max_plot") {
+            if (!plots.length) return "No plots available.";
+            const expensivePlot = plots.reduce((a,b) => a.price > b.price ? a : b);
+            return `🌟 **Most Expensive Plot**<br>${propertyToHTML(expensivePlot)}`;
+        }
+        if (lower === "cheapest_garden") {
+            const gardenHouses = houses.filter(h => h.garden);
+            if (!gardenHouses.length) return "No house with garden found.";
+            const cheapestGarden = gardenHouses.reduce((a,b) => a.price < b.price ? a : b);
+            return `🌻 **Cheapest House with Garden**<br>${propertyToHTML(cheapestGarden)}`;
+        }
+        if (lower === "all_properties") {
+            const all = [...houses, ...plots];
+            return displayPropertyList(all, "📋 Complete List (Houses + Plots)");
+        }
+
+        // ---------- NATURAL LANGUAGE PROCESSING (smart queries) ----------
+        // 1. houses with garden any phrase
+        if ((lower.includes("garden") && lower.includes("house")) || (lower.includes("houses with garden")) || (lower === "houses garden")) {
+            const gardens = houses.filter(h => h.garden);
+            return displayPropertyList(gardens, "🌿 Houses that have a garden");
+        }
+        // 2. cheapest house with garden (text)
+        if ((lower.includes("cheapest") && lower.includes("garden")) || (lower.includes("minimum") && lower.includes("garden") && lower.includes("house"))) {
+            const gardenHouses = houses.filter(h => h.garden);
+            if(!gardenHouses.length) return "No garden houses found.";
+            const cheapGarden = gardenHouses.reduce((a,b) => a.price < b.price ? a : b);
+            return `🌱 Minimum price garden house:<br>${propertyToHTML(cheapGarden)}`;
+        }
+        // 3. max price garden house
+        if ((lower.includes("expensive") && lower.includes("garden")) || (lower.includes("maximum") && lower.includes("garden"))) {
+            const gardenHouses = houses.filter(h => h.garden);
+            if(!gardenHouses.length) return "No garden houses.";
+            const maxGarden = gardenHouses.reduce((a,b) => a.price > b.price ? a : b);
+            return `💎 Most expensive house with garden:<br>${propertyToHTML(maxGarden)}`;
+        }
+
+        // min price house / cheapest house natural
+        if (lower.includes("cheapest house") || lower.includes("minimum price house") || (lower.includes("min") && lower.includes("house") && !lower.includes("garden"))) {
+            const cheapestHouse = houses.reduce((a,b) => a.price < b.price ? a : b);
+            return `🏡 Cheapest House overall:<br>${propertyToHTML(cheapestHouse)}`;
+        }
+
+        // max price house natural
+        if (lower.includes("most expensive house") || lower.includes("maximum price house") || (lower.includes("max") && lower.includes("house"))) {
+            const maxHouse = houses.reduce((a,b) => a.price > b.price ? a : b);
+            return `🏰 Most expensive house:<br>${propertyToHTML(maxHouse)}`;
+        }
+
+        // cheapest plot / min plot
+        if (lower.includes("cheapest plot") || lower.includes("min plot") || lower.includes("minimum price plot")) {
+            const minPlot = plots.reduce((a,b) => a.price < b.price ? a : b);
+            return `📍 Cheapest Plot:<br>${propertyToHTML(minPlot)}`;
+        }
+
+        // most expensive plot / max plot
+        if (lower.includes("most expensive plot") || lower.includes("max plot") || lower.includes("maximum price plot")) {
+            const maxPlot = plots.reduce((a,b) => a.price > b.price ? a : b);
+            return `🏞️ Most expensive Plot:<br>${propertyToHTML(maxPlot)}`;
+        }
+
+        // show all houses command (text)
+        if (lower.includes("all houses") || (lower.includes("houses") && !lower.includes("garden") && !lower.includes("min") && !lower.includes("max") && !lower.includes("plot"))) {
+            return displayPropertyList(houses, "🏠 All Houses");
+        }
+        // show all plots text
+        if (lower.includes("all plots") || (lower.includes("plots") && !lower.includes("cheapest") && !lower.includes("expensive"))) {
+            return displayPropertyList(plots, "📐 All Plots for Sale");
+        }
+        // show all properties combined
+        if (lower.includes("all properties") || lower.includes("complete list")) {
+            const all = [...houses, ...plots];
+            return displayPropertyList(all, "🏡📐 All Properties (Houses + Plots)");
+        }
+
+        // price under X (e.g. houses under 200k)
+        const underMatch = lower.match(/under\s*([\d,]+(k)?)/) || lower.match(/less than\s*([\d,]+(k)?)/);
+        if (underMatch) {
+            let val = underMatch[1].replace(/,/g,'');
+            let multiplier = 1;
+            if (val.toLowerCase().includes('k')) {
+                multiplier = 1000;
+                val = val.replace(/k/i,'');
+            }
+            let limit = parseInt(val) * multiplier;
+            if (!isNaN(limit)) {
+                const affordableHouses = houses.filter(h => h.price <= limit);
+                const affordablePlots = plots.filter(p => p.price <= limit);
+                const combined = [...affordableHouses, ...affordablePlots];
+                if (!combined.length) return `❌ No properties under ${formatPrice(limit)}.`;
+                return displayPropertyList(combined, `🏷️ Properties ≤ ${formatPrice(limit)}`);
+            }
+        }
+
+        // fallback help
+        return `🤖 I didn't get that. Try buttons below or queries like:<br>
+                • "cheapest house with garden"<br>
+                • "max plot"<br>
+                • "houses under 250k"<br>
+                • "all properties"`;
+    }
+
+    // ---------- UI RENDERING (Chat Messages) ----------
+    const messagesContainer = document.getElementById('chatMessages');
+    const textInput = document.getElementById('textInput');
+    const sendTextBtn = document.getElementById('sendTextBtn');
+
+    function addMessage(messageText, isUser = false, isHtml = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'bubble';
+        if (isHtml && !isUser) {
+            bubbleDiv.innerHTML = messageText;
+        } else {
+            bubbleDiv.innerText = messageText;
+        }
+        msgDiv.appendChild(bubbleDiv);
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'time';
+        timeSpan.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+        msgDiv.appendChild(timeSpan);
+        messagesContainer.appendChild(msgDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function handleCommand(command) {
+        // show user (optional for button click: but we can show that user clicked certain option)
+        let displayUserMsg = "";
+        switch(command) {
+            case "all_houses": displayUserMsg = "🏠 Show all houses"; break;
+            case "all_plots": displayUserMsg = "📐 Show all plots"; break;
+            case "gardens_only": displayUserMsg = "🌿 Show houses with garden"; break;
+            case "min_house": displayUserMsg = "💰 Minimum price house"; break;
+            case "max_house": displayUserMsg = "👑 Maximum price house"; break;
+            case "min_plot": displayUserMsg = "📌 Minimum price plot"; break;
+            case "max_plot": displayUserMsg = "🌟 Most expensive plot"; break;
+            case "cheapest_garden": displayUserMsg = "🌻 Cheapest house with garden"; break;
+            case "all_properties": displayUserMsg = "📋 Show all properties"; break;
+            default: displayUserMsg = command;
+        }
+        addMessage(displayUserMsg, true, false);
+        // simulate bot thinking
+        setTimeout(() => {
+            const response = getBotResponse(command);
+            addMessage(response, false, true);
+        }, 150);
+    }
+
+    // button click listeners
+    const allBtns = document.querySelectorAll('.chat-btn');
+    allBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const cmd = btn.getAttribute('data-command');
+            if (cmd) {
+                handleCommand(cmd);
+            }
+        });
+    });
+
+    // text input handling
+    function handleTextMessage() {
+        let userText = textInput.value.trim();
+        if (userText === "") return;
+        addMessage(userText, true, false);
+        textInput.value = "";
+        setTimeout(() => {
+            const botReply = getBotResponse(userText);
+            addMessage(botReply, false, true);
+        }, 200);
+    }
+
+    sendTextBtn.addEventListener('click', handleTextMessage);
+    textInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleTextMessage();
+    });
+
+    // initial greeting already exists, but we add a small suggestions tip
+    setTimeout(() => {
+        // ensure that chatbot shows all buttons clearly
+    }, 100);
+</script>
+</body>
+</html>
